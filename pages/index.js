@@ -5,20 +5,30 @@ import { FaEdit } from 'react-icons/fa';
 import { MdDelete } from 'react-icons/md'
 import { FiUserPlus } from 'react-icons/fi'
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 
-export default function Home() {
+export default function Home({ users }) {
 
+  // const [users, setUsers] = useState(null);
   const [add, setAdd] = useState(false);
   const [updateUser, setUpdateUser] = useState(null);
   const [deleteUser, setDeleteUser] = useState(null);
 
-  const { isLoading, isError, data, error, refetch } = useQuery('users', getUsers);
+  const router = useRouter();
 
-  // console.log(data);
+  // const { isLoading, isError, data, error, refetch } = useQuery('users', getUsers);
+
+  // console.log(users);
+
+  const refreshData = () => {
+    router.replace(router.asPath);
+  }
+
 
   const addUser = () => {
     console.log('Adding user')
-    setAdd(!add)
+    setAdd(!add);
+    refreshData();
   }
 
   const handleSubmit = async (e) => {
@@ -36,7 +46,7 @@ export default function Home() {
     const result = await addUserToDB(userInfo)
     console.log(result);
 
-    refetch();
+    refreshData();
     e.target.reset();
 
   }
@@ -55,7 +65,7 @@ export default function Home() {
     }
 
     // console.log(updatedUserData)
-    updateUserHandle(updatedUserData, refetch);
+    updateUserHandle(updatedUserData, refreshData);
     e.target.reset();
     setUpdateUser(false);
 
@@ -63,7 +73,7 @@ export default function Home() {
 
   const handleDelete = (id) => {
 
-    handleDeleteUser(deleteUser, refetch)
+    handleDeleteUser(deleteUser, refreshData)
 
 
     setDeleteUser(null);
@@ -138,8 +148,8 @@ export default function Home() {
             </tr>
           </thead>
           <tbody className='border'>
-            {data &&
-              data.map((user, index) => (
+            {users &&
+              users?.map((user, index) => (
                 <>
                   <tr className='border-b'>
                     <td>{index + 1}</td>
@@ -175,3 +185,14 @@ export default function Home() {
   )
 }
 
+export const getStaticProps = async (context) => {
+  const users = await getUsers();
+  // console.log(users)
+
+  return {
+    props: {
+      users: JSON.parse(JSON.stringify(users)),
+      // getStaticProps: JSON.parse(JSON.stringify(getStaticProps))
+    }
+  }
+}
